@@ -1,8 +1,8 @@
 from __future__ import annotations
 import pygame as pg
+from src.utils import Position, PositionCamera, Direction, GameSettings, Logger
 from .entity import Entity
 from src.core.services import input_manager
-from src.utils import Position, PositionCamera, GameSettings, Logger
 from src.core import GameManager
 import math
 from typing import override
@@ -26,16 +26,33 @@ class Player(Entity):
     @override
     def update(self, dt: float) -> None:
         dis = Position(0, 0)
+        raw_x = 0
+        raw_y = 0
 
         # --- INPUT ---
         if input_manager.key_down(pg.K_LEFT) or input_manager.key_down(pg.K_a):
             dis.x -= 1
+            raw_x = -1
         if input_manager.key_down(pg.K_RIGHT) or input_manager.key_down(pg.K_d):
             dis.x += 1
+            raw_x = 1
         if input_manager.key_down(pg.K_UP) or input_manager.key_down(pg.K_w):
             dis.y -= 1
+            raw_y = -1
         if input_manager.key_down(pg.K_DOWN) or input_manager.key_down(pg.K_s):
             dis.y += 1
+            raw_y = 1
+
+        if raw_x > 0:
+            self.direction = Direction.RIGHT
+        elif raw_x < 0:
+            self.direction = Direction.LEFT
+        elif raw_y > 0:
+            self.direction = Direction.DOWN
+        elif raw_y < 0:
+            self.direction = Direction.UP
+
+        self.animation.switch(self.direction.name.lower())
 
         magnitude = math.sqrt(dis.x**2 + dis.y**2)
         if magnitude > 0:
@@ -43,6 +60,8 @@ class Player(Entity):
             dis.y /= magnitude
             dis.x *= self.speed * dt
             dis.y *= self.speed * dt
+
+        is_moving = raw_x != 0 or raw_y != 0
 
         # Move X
         player_rect_x = self.animation.rect.copy()
@@ -69,7 +88,12 @@ class Player(Entity):
 
         self.game_manager.try_switch_map()
 
-        super().update(dt)
+        if is_moving:
+            super().update(dt)
+        else:
+            self.animation.update_pos(self.position)
+
+        self.last_is_moving = is_moving
 
     @override
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
@@ -93,3 +117,12 @@ class Player(Entity):
             data["y"] * GameSettings.TILE_SIZE,
             game_manager
         )
+
+    @override
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "x": self.position.x / GameSettings.TILE_SIZE,
+            "y": self.position.y / GameSettings.TILE_SIZE,
+            "direction": self.direction.name,
+            "is_moving": self.last_is_moving
+        }

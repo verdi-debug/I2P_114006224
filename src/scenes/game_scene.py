@@ -818,9 +818,9 @@ class GameScene(Scene):
 
         if self.game_manager.player:
             # Draw all bush rects in red
-            for bush in self.bush_rects:
-                rect_on_screen = camera.transform_rect(bush)
-                pg.draw.rect(screen, (255, 0, 0), rect_on_screen, 2)
+            # for bush in self.bush_rects:
+            # rect_on_screen = camera.transform_rect(bush)
+            # pg.draw.rect(screen, (255, 0, 0), rect_on_screen, 2)
 
             player_rect_on_screen = camera.transform_rect(
                 self.game_manager.player.rect)

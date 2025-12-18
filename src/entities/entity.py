@@ -50,6 +50,8 @@ class Entity:
         return {
             "x": self.position.x / GameSettings.TILE_SIZE,
             "y": self.position.y / GameSettings.TILE_SIZE,
+            "direction": self.direction.name,
+            "is_moving": True
         }
 
     @classmethod

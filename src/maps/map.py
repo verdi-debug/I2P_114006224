@@ -72,10 +72,10 @@ class Map:
     def draw(self, screen: pg.Surface, camera: PositionCamera):
         screen.blit(self._surface, camera.transform_position(Position(0, 0)))
 
-        if GameSettings.DRAW_HITBOXES:
+        '''if GameSettings.DRAW_HITBOXES:
             for rect in self._collision_map:
                 pg.draw.rect(screen, (255, 0, 0),
-                             camera.transform_rect(rect), 1)
+                             camera.transform_rect(rect), 1)'''
 
     def check_collision(self, rect: pg.Rect) -> bool:
         for collision_rect in self._collision_map:

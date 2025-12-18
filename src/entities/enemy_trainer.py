@@ -91,15 +91,15 @@ class EnemyTrainer(Entity):
         if self.detected:
             self.warning_sign.draw(screen, camera)
 
-        if GameSettings.DRAW_HITBOXES:
-            los_rect = self._get_los_rect()
-            if los_rect is not None:
-                pg.draw.rect(
-                    screen,
-                    (255, 255, 0),
-                    camera.transform_rect(los_rect),
-                    1
-                )
+        # if GameSettings.DRAW_HITBOXES:
+            # los_rect = self._get_los_rect()
+            # if los_rect is not None:
+            # pg.draw.rect(
+            # screen,
+            # (255, 255, 0),
+            # camera.transform_rect(los_rect),
+            # 1
+            # )
 
     def _set_direction(self, direction: Direction) -> None:
         self.direction = direction
