@@ -1,0 +1,242 @@
+{
+  "map": [
+    {
+      "path": "map.tmx",
+      "teleport": [
+        {
+          "x": 24,
+          "y": 23,
+          "destination": "shop.tmx",
+          "target_x": 12,
+          "target_y": 13
+        },
+        {
+          "x": 35,
+          "y": 23,
+          "destination": "gym.tmx",
+          "target_x": 12,
+          "target_y": 13
+        }
+      ],
+      "player": {
+        "x": 26.0,
+        "y": 25.0
+      },
+      "enemy_trainers": [
+        {
+          "x": 24.0,
+          "y": 29.0,
+          "classification": "stationary",
+          "facing": "RIGHT",
+          "max_tiles": 2,
+          "monsters": [
+            {
+              "name": "Pikachu",
+              "hp": 100,
+              "max_hp": 100,
+              "level": 25,
+              "sprite_path": "menu_sprites/menusprite1.png"
+            }
+          ]
+        },
+        {
+          "x": 54.0,
+          "y": 16.0,
+          "classification": "stationary",
+          "facing": "LEFT",
+          "max_tiles": 2,
+          "monsters": [
+            {
+              "name": "Pikachu",
+              "hp": 100,
+              "max_hp": 100,
+              "level": 25,
+              "sprite_path": "menu_sprites/menusprite1.png"
+            }
+          ]
+        },
+        {
+          "x": 31.0,
+          "y": 31.0,
+          "classification": "stationary",
+          "facing": "UP",
+          "max_tiles": 2,
+          "monsters": [
+            {
+              "name": "Pikachu",
+              "hp": 100,
+              "max_hp": 100,
+              "level": 25,
+              "sprite_path": "menu_sprites/menusprite1.png"
+            }
+          ]
+        }
+      ],
+      "shop_npc": [
+        {
+          "x": 19.0,
+          "y": 29.0,
+          "facing": "LEFT",
+          "max_tiles": 2,
+          "n_keyframes": 4,
+          "rows": [
+            "down",
+            "left",
+            "right",
+            "up"
+          ],
+          "shop_items": [
+            {
+              "sprite_path": "ingame_ui/potion.png",
+              "name": "Potion",
+              "price": 30,
+              "count": 10
+            },
+            {
+              "sprite_path": "ingame_ui/ball.png",
+              "name": "Pokeball",
+              "price": 50,
+              "count": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "shop.tmx",
+      "teleport": [
+        {
+          "x": 11,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 24,
+          "target_y": 24
+        },
+        {
+          "x": 12,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 24,
+          "target_y": 24
+        },
+        {
+          "x": 13,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 24,
+          "target_y": 24
+        }
+      ],
+      "player": {
+        "x": 12.0,
+        "y": 14.0
+      },
+      "enemy_trainers": [],
+      "shop_npc": []
+    },
+    {
+      "path": "gym.tmx",
+      "teleport": [
+        {
+          "x": 11,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 35,
+          "target_y": 24
+        },
+        {
+          "x": 12,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 35,
+          "target_y": 24
+        },
+        {
+          "x": 13,
+          "y": 14,
+          "destination": "map.tmx",
+          "target_x": 35,
+          "target_y": 24
+        }
+      ],
+      "player": {
+        "x": 12.0,
+        "y": 14.0
+      },
+      "enemy_trainers": [],
+      "shop_npc": []
+    }
+  ],
+  "current_map": "map.tmx",
+  "player": {
+    "x": 22.142702309954437,
+    "y": 28.587991631835774
+  },
+  "bag": {
+    "monsters": [
+      {
+        "name": "Pikachu",
+        "hp": 100,
+        "max_hp": 100,
+        "level": 25,
+        "sprite_path": "menu_sprites/menusprite1.png"
+      },
+      {
+        "name": "Charizard",
+        "hp": 100,
+        "max_hp": 200,
+        "level": 36,
+        "sprite_path": "menu_sprites/menusprite2.png"
+      }
+    ],
+    "items": [
+      {
+        "name": "Potion",
+        "count": 6,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Coins",
+        "count": 8,
+        "sprite_path": "ingame_ui/coin.png"
+      },
+      {
+        "name": "Pokeball",
+        "count": 11,
+        "sprite_path": "ingame_ui/ball.png"
+      },
+      {
+        "name": "Heal Potion",
+        "count": 5,
+        "sprite_path": "ingame_ui/baricon2.png"
+      },
+      {
+        "name": "Attack Potion",
+        "count": 5,
+        "sprite_path": "ingame_ui/options1.png"
+      },
+      {
+        "name": "Defense Potion",
+        "count": 5,
+        "sprite_path": "ingame_ui/options2.png"
+      }
+    ]
+  },
+  "shop_state": {
+    "items": [
+      {
+        "name": "Potion",
+        "count": 5,
+        "price": 30,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Pokeball",
+        "count": 5,
+        "price": 50,
+        "sprite_path": "ingame_ui/ball.png"
+      }
+    ],
+    "time_until_refresh": 74714
+  }
+}
