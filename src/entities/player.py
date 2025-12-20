@@ -47,17 +47,28 @@ class Player(Entity):
             if self.direction != Direction.RIGHT:
                 self.direction = Direction.RIGHT
                 self.animation.switch("right")
+
+            if self.is_moving:
+                self.animation.switch("right")
+
         elif raw_x < 0:
             if self.direction != Direction.LEFT:
                 self.direction = Direction.LEFT
                 self.animation.switch("left")
+            if self.is_moving:
+                self.animation.switch("left")
+
         elif raw_y > 0:
             if self.direction != Direction.DOWN:
                 self.direction = Direction.DOWN
                 self.animation.switch("down")
+            if self.is_moving:
+                self.animation.switch("down")
         elif raw_y < 0:
             if self.direction != Direction.UP:
                 self.direction = Direction.UP
+                self.animation.switch("up")
+            if self.is_moving:
                 self.animation.switch("up")
 
         magnitude = math.sqrt(dis.x**2 + dis.y**2)
@@ -97,6 +108,18 @@ class Player(Entity):
         super().update(dt)
         self.animation.update_pos(self.position)
         self.animation.update(dt)
+        self.is_moving = raw_x != 0 or raw_y != 0
+
+        if self.is_moving:
+            if raw_x > 0:
+                self.animation.switch("right")
+            elif raw_x < 0:
+                self.animation.switch("left")
+            elif raw_y > 0:
+                self.animation.switch("down")
+            elif raw_y < 0:
+                self.animation.switch("up")
+
         self.last_is_moving = is_moving
 
     @override

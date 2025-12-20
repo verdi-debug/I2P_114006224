@@ -17,7 +17,6 @@ from src.interface.components import (
 )
 from src.interface.components.shop_item_list import ShopItemList
 from src.interface.components.shop_item_row import ShopItemRow
-from src.interface.components.chat_overlay import ChatOverlay
 from typing import override
 from src.sprites import Sprite, Animation
 
@@ -50,9 +49,6 @@ class GameScene(Scene):
 
         # Chat Overlay
         self._online_last_pos: dict[int, tuple[float, float]] = {}
-        self._chat_bubbles: dict[int, tuple[str, float]] = {}
-        self._last_chat_id_seen: int = 0
-        self._chat_messages: deque[dict] = deque(maxlen=100)
 
         # Get the bush layer
         bush_layer = self.tmx_data.get_layer_by_name("PokemonBush")
@@ -121,14 +117,10 @@ class GameScene(Scene):
         # Online Manager
         if GameSettings.IS_ONLINE:
             self.online_manager = OnlineManager()
-            self.chat_overlay = ChatOverlay(
-                send_callback=self.send_message,
-                get_messages=self.get_messages
-            )
 
         else:
             self.online_manager = None
-            self.chat_overlay = None
+
         self.sprite_online = Sprite(
             "ingame_ui/options1.png", (GameSettings.TILE_SIZE, GameSettings.TILE_SIZE))
         self.remote_players: dict[int, dict] = {}
@@ -185,9 +177,7 @@ class GameScene(Scene):
             on_click=self._handle_npc_purchase
         )
         self.current_npc_item: dict | None = None
-        self.next_refresh_time = 0
-        if self.game_manager.shop_items:
-            self.refresh_shop_item()
+
         # Battle flag init
         self.battle_triggered = False
 
@@ -341,28 +331,36 @@ class GameScene(Scene):
     def open_shop_npc(self):
         self.shop_npc_overlay = True
         if self.game_manager.current_shop_npc:
+            # Get the specific NPC the player is talking to
             npc = self.game_manager.current_shop_npc[0]
-            self.refresh_shop_item(npc)
+            self.load_npc_items(npc)
 
-    def refresh_shop_item(self, npc: ShopNPC | None = None):
-        items: list[dict]
+    def load_npc_items(self, npc: ShopNPC | None = None):
+        items: list[dict] = []
+
+        # 1. Try to get items specifically from this NPC
         if npc and npc.shop_items:
-            items = [random.choice(npc.shop_items)]
+            # SHOW ALL ITEMS (Removed random.choice)
+            items = npc.shop_items
+
+        # 2. Fallback to global shop items if NPC has none
         elif self.game_manager.shop_items:
-            items = [random.choice(self.game_manager.shop_items)]
+            items = self.game_manager.shop_items
+
         else:
             Logger.warning("[ShopNPC] No shop items available!")
             self.shop_npc_list.set_items([])
             return
 
-        Logger.info(f"[ShopNPC] Refreshing shop items: {items}")
+        Logger.info(f"[ShopNPC] Loading shop items: {items}")
+
+        # Update the UI list
         self.shop_npc_list.set_items(items)
+
+        # Select the first item by default so the buy button works immediately
         self.current_npc_item = items[0] if items else None
-        # Avoid refreshing every frame
-        self.next_refresh_time = pg.time.get_ticks() + 5000
 
     def _get_shop_stock(self) -> list[dict]:
-        """Default provider used by the generic shop overlay."""
         if not self.game_manager.shop_items:
             return []
         return [random.choice(self.game_manager.shop_items)]
@@ -371,18 +369,20 @@ class GameScene(Scene):
         self.shop_npc_overlay = False
 
     def _handle_npc_purchase(self) -> None:
-        """Handle buy button for NPC shop."""
         item = self.current_npc_item
         if not item or item.get("count", 0) <= 0:
             return
+
         price = item.get("price", 0)
-        bag_items = self.game_manager.bag.items if self.game_manager.bag else []
-        if not self.game_manager.bag.spend_coins(price):
+        bag = self.game_manager.bag
+
+        if not bag.spend_coins(price):
             Logger.warning("Not enough coins to buy")
             return
-        # decrement NPC stock
-        item["count"] = max(0, item.get("count", 0) - 1)
-        # add to bag inventory
+
+        item["count"] -= 1
+
+        bag_items = bag.items
         for it in bag_items:
             if it.get("name") == item.get("name"):
                 it["count"] += 1
@@ -393,9 +393,12 @@ class GameScene(Scene):
                 "count": 1,
                 "sprite_path": item.get("sprite_path", "")
             })
+
         self._refresh_bag_items()
-        if self.game_manager.current_shop_npc:
-            current_npc = self.game_manager.current_shop_npc[0]
+
+        current_npc = self.game_manager.current_shop_npc[
+            0] if self.game_manager.current_shop_npc else None
+        if current_npc:
             self.shop_npc_list.set_items(current_npc.shop_items[:1])
 
     def save_game(self):
@@ -404,7 +407,7 @@ class GameScene(Scene):
         Logger.info("Game saved successfully")
 
     def load_game(self):
-        """Load the game state from file."""
+
         manager = GameManager.load("saves/game0.json")
         if manager is not None:
             self.game_manager = manager
@@ -414,7 +417,7 @@ class GameScene(Scene):
             Logger.warning("Failed to load game")
 
         if self.game_manager.current_shop_npc:
-            self.refresh_shop_item()
+            self.load_npc_items(self.game_manager.current_shop_npc[0])
 
     def _refresh_bag_items(self):
         items = self.game_manager.bag.items if self.game_manager.bag else []
@@ -574,8 +577,6 @@ class GameScene(Scene):
 
     @override
     def update(self, dt: float):
-        # Advance shop restock timers even when overlay closed (game time driven)
-        self.game_manager.tick_shop(int(dt * 1000))
         self.shop_item_list.update(dt)
 
         # Update player and other data
@@ -608,31 +609,6 @@ class GameScene(Scene):
                 sprite=sprite_path
             )
             self._update_remote_players(dt)
-
-            import time
-            if self.online_manager:
-                try:
-                    msgs = self.online_manager.get_recent_chat(50)
-                    max_id = self._last_chat_id_seen
-                    now = time.monotonic()
-                    for m in msgs:
-                        mid = int(m.get("id", 0))
-                        if mid <= self._last_chat_id_seen:
-                            continue
-                        sender = int(m.get("from", -1))
-                        text = str(m.get("text", ""))
-                        if sender >= 0 and text:
-                            self._chat_bubbles[sender] = (text, now + 5.0)
-                        if mid > max_id:
-                            max_id = mid
-                    self._last_chat_id_seen = max_id
-                except Exception:
-                    pass
-
-        if self.chat_overlay:
-            if input_manager.key_pressed(pg.K_t):
-                self.chat_overlay.open()
-            self.chat_overlay.update(dt)
 
         # Get Player
         player = self.game_manager.player
@@ -691,9 +667,6 @@ class GameScene(Scene):
             self.back_button_shop_npc.update(dt)
             self.buy_button_shop_npc.update(dt)
 
-            if pg.time.get_ticks() >= self.next_refresh_time:
-                self.refresh_shop_item()
-
         # Update Navigation Button
         self.place1_button.update(dt)
         self.place2_button.update(dt)
@@ -719,7 +692,6 @@ class GameScene(Scene):
             pid = p.get("id")
             if pid is None:
                 continue
-            print(f"Remote data for pid={pid}: {p}")
             active_ids.add(pid)
 
             sprite_path = p.get("sprite", "character/ow1.png")
@@ -740,7 +712,6 @@ class GameScene(Scene):
 
             anim: Animation = self.remote_players[pid]["anim"]
 
-            # Step 2: update direction safely
             target_x = p.get("x", 0)
             target_y = p.get("y", 0)
             last_x, last_y = self._online_last_pos.get(
@@ -749,17 +720,16 @@ class GameScene(Scene):
             dx = target_x - last_x
             dy = target_y - last_y
 
-            # Tentukan arah
             if abs(dx) > abs(dy):
                 dir_name = "right" if dx > 0 else "left"
             elif abs(dy) > 0:
                 dir_name = "down" if dy > 0 else "up"
             else:
-                dir_name = anim.cur_row  # tidak bergerak
+                dir_name = anim.cur_row  # not moving
 
             anim.switch(dir_name)
 
-            # Step 1: smooth position update
+            # pos update
             target_x = p.get("x", 0)
             target_y = p.get("y", 0)
             last_x, last_y = self._online_last_pos.get(
@@ -771,12 +741,10 @@ class GameScene(Scene):
             anim.update_pos(pos)
             self._online_last_pos[pid] = (new_x, new_y)
 
-            # Step 3: only animate if moving
             is_moving = p.get("is_moving", True)
             if is_moving:
                 anim.update(dt)
 
-        # Remove stale entries (this is OUTSIDE the loop)
         for pid in list(self.remote_players.keys()):
             if pid not in active_ids:
                 del self.remote_players[pid]
@@ -818,7 +786,7 @@ class GameScene(Scene):
             px = int(px_tile * (150 / map_w))
             py = int(py_tile * (150 / map_h))
 
-            # draw dot
+            # draw player dot
             mm = minimap_scaled.copy()
             pg.draw.circle(mm, (255, 0, 0), (px, py), 3)
 
@@ -839,14 +807,6 @@ class GameScene(Scene):
                 if data.get("map") != self.game_manager.current_map.path_name:
                     continue
                 anim.draw(screen, cam)
-
-            try:
-                self._draw_chat_bubbles(screen, cam)
-            except Exception:
-                pass
-
-        if self.chat_overlay:
-            self.chat_overlay.draw(screen)
 
         if self.game_manager.player:
             # Draw all bush rects in red
@@ -1012,66 +972,3 @@ class GameScene(Scene):
 
             # Draw back button
             self.back_button.draw(screen)
-
-    def _draw_chat_bubbles(self, screen: pg.Surface, cam: PositionCamera) -> None:
-        if not self.online_manager:
-            return
-
-        import time
-        now = time.monotonic()
-        expired = [pid for pid,
-                   (_, ts) in self._chat_bubbles.items() if ts <= now]
-        for pid in expired:
-            self._chat_bubbles.pop(pid, None)
-
-        if not self._chat_bubbles:
-            return
-
-        local_pid = self.online_manager.player_id
-        font = pg.font.SysFont("arial", 14)
-
-        if self.game_manager.player and local_pid in self._chat_bubbles:
-            text, _ = self._chat_bubbles[local_pid]
-            self._draw_chat_bubble_for_pos(
-                screen, cam, self.game_manager.player.position, text, font)
-
-        for pid, (text, _) in self._chat_bubbles.items():
-            if pid == local_pid:
-                continue
-            pos_xy = self._online_last_pos.get(pid)
-            if not pos_xy:
-                continue
-            px, py = pos_xy
-            self._draw_chat_bubble_for_pos(
-                screen, cam, Position(px, py), text, font)
-
-    def _draw_chat_bubble_for_pos(self, screen: pg.Surface, camera: PositionCamera, world_pos: Position, text: str, font: pg.font.Font):
-        screen_pos = camera.transform_position(world_pos)
-        sx, sy = screen_pos
-
-        bubble_y = sy - GameSettings.TILE_SIZE - 20
-
-        text_surf = font.render(text, True, (255, 255, 255))
-        padding = 8
-        bubble_w = text_surf.get_width() + padding * 2
-        bubble_h = text_surf.get_height() + padding * 2
-
-        bubble_x = sx - bubble_w // 2
-
-        bg_surf = pg.Surface((bubble_w, bubble_h), pg.SRCALPHA)
-        bg_surf.fill((0, 0, 0, 180))
-        screen.blit(bg_surf, (bubble_x, bubble_y))
-
-        screen.blit(text_surf, (bubble_x + padding, bubble_y + padding))
-
-    def send_message(self, text: str) -> bool:
-        """Send a chat message via online manager."""
-        if self.online_manager:
-            return self.online_manager.send_message(text)
-        return False
-
-    def get_messages(self, limit: int) -> list[dict]:
-        """Get recent chat messages from online manager."""
-        if self.online_manager:
-            return self.online_manager.get_recent_chat(limit)
-        return []

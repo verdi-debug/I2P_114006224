@@ -98,7 +98,7 @@
               "sprite_path": "ingame_ui/potion.png",
               "name": "Potion",
               "price": 30,
-              "count": 10
+              "count": 7
             },
             {
               "sprite_path": "ingame_ui/ball.png",
@@ -177,10 +177,10 @@
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 22.818690475583168,
-    "y": 30.967916738879307,
-    "direction": "UP",
-    "is_moving": false
+    "x": 23.203166373564635,
+    "y": 26.688752816293224,
+    "direction": "RIGHT",
+    "is_moving": true
   },
   "bag": {
     "monsters": [
@@ -202,12 +202,12 @@
     "items": [
       {
         "name": "Potion",
-        "count": 6,
+        "count": 9,
         "sprite_path": "ingame_ui/potion.png"
       },
       {
         "name": "Coins",
-        "count": 18,
+        "count": 90,
         "sprite_path": "ingame_ui/coin.png"
       },
       {
