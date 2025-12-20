@@ -44,15 +44,21 @@ class Player(Entity):
             raw_y = 1
 
         if raw_x > 0:
-            self.direction = Direction.RIGHT
+            if self.direction != Direction.RIGHT:
+                self.direction = Direction.RIGHT
+                self.animation.switch("right")
         elif raw_x < 0:
-            self.direction = Direction.LEFT
+            if self.direction != Direction.LEFT:
+                self.direction = Direction.LEFT
+                self.animation.switch("left")
         elif raw_y > 0:
-            self.direction = Direction.DOWN
+            if self.direction != Direction.DOWN:
+                self.direction = Direction.DOWN
+                self.animation.switch("down")
         elif raw_y < 0:
-            self.direction = Direction.UP
-
-        self.animation.switch(self.direction.name.lower())
+            if self.direction != Direction.UP:
+                self.direction = Direction.UP
+                self.animation.switch("up")
 
         magnitude = math.sqrt(dis.x**2 + dis.y**2)
         if magnitude > 0:
@@ -88,11 +94,9 @@ class Player(Entity):
 
         self.game_manager.try_switch_map()
 
-        if is_moving:
-            super().update(dt)
-        else:
-            self.animation.update_pos(self.position)
-
+        super().update(dt)
+        self.animation.update_pos(self.position)
+        self.animation.update(dt)
         self.last_is_moving = is_moving
 
     @override
@@ -112,11 +116,17 @@ class Player(Entity):
     @classmethod
     @override
     def from_dict(cls, data: dict[str, object], game_manager: GameManager) -> Player:
-        return cls(
+
+        player = cls(
             data["x"] * GameSettings.TILE_SIZE,
             data["y"] * GameSettings.TILE_SIZE,
             game_manager
         )
+
+        if "direction" in data:
+            player.direction = Direction[data["direction"]]
+            player.animation.switch(player.direction.name.lower())
+        return player
 
     @override
     def to_dict(self) -> dict[str, object]:

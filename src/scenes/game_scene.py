@@ -708,17 +708,20 @@ class GameScene(Scene):
             self.game_manager.try_switch_map()
 
     def _update_remote_players(self, dt: float) -> None:
-        """Sync remote player animations/positions using online data."""
         if not self.online_manager:
             return
 
         remote_list = self.online_manager.get_list_players()
         active_ids = set()
+
         for p in remote_list:
+
             pid = p.get("id")
             if pid is None:
                 continue
+            print(f"Remote data for pid={pid}: {p}")
             active_ids.add(pid)
+
             sprite_path = p.get("sprite", "character/ow1.png")
             info = self.remote_players.get(pid)
             if info is None or info.get("sprite") != sprite_path:
@@ -736,15 +739,44 @@ class GameScene(Scene):
                 self.remote_players[pid]["data"] = p
 
             anim: Animation = self.remote_players[pid]["anim"]
-            dir_name = p.get("dir", "down").lower()
-            if dir_name in anim.animations:
-                anim.switch(dir_name)
-            anim.update(dt)
-            pos = Position(p.get("x", 0), p.get("y", 0))
-            anim.update_pos(pos)
-            self._online_last_pos[pid] = (pos.x, pos.y)
 
-        # Remove stale entries
+            # Step 2: update direction safely
+            target_x = p.get("x", 0)
+            target_y = p.get("y", 0)
+            last_x, last_y = self._online_last_pos.get(
+                pid, (target_x, target_y))
+
+            dx = target_x - last_x
+            dy = target_y - last_y
+
+            # Tentukan arah
+            if abs(dx) > abs(dy):
+                dir_name = "right" if dx > 0 else "left"
+            elif abs(dy) > 0:
+                dir_name = "down" if dy > 0 else "up"
+            else:
+                dir_name = anim.cur_row  # tidak bergerak
+
+            anim.switch(dir_name)
+
+            # Step 1: smooth position update
+            target_x = p.get("x", 0)
+            target_y = p.get("y", 0)
+            last_x, last_y = self._online_last_pos.get(
+                pid, (target_x, target_y))
+            lerp_speed = 8.0
+            new_x = last_x + (target_x - last_x) * lerp_speed * dt
+            new_y = last_y + (target_y - last_y) * lerp_speed * dt
+            pos = Position(new_x, new_y)
+            anim.update_pos(pos)
+            self._online_last_pos[pid] = (new_x, new_y)
+
+            # Step 3: only animate if moving
+            is_moving = p.get("is_moving", True)
+            if is_moving:
+                anim.update(dt)
+
+        # Remove stale entries (this is OUTSIDE the loop)
         for pid in list(self.remote_players.keys()):
             if pid not in active_ids:
                 del self.remote_players[pid]

@@ -26,6 +26,8 @@
         {
           "x": 24.0,
           "y": 29.0,
+          "direction": "RIGHT",
+          "is_moving": true,
           "classification": "stationary",
           "facing": "RIGHT",
           "max_tiles": 2,
@@ -42,6 +44,8 @@
         {
           "x": 54.0,
           "y": 16.0,
+          "direction": "LEFT",
+          "is_moving": true,
           "classification": "stationary",
           "facing": "LEFT",
           "max_tiles": 2,
@@ -58,6 +62,8 @@
         {
           "x": 31.0,
           "y": 31.0,
+          "direction": "UP",
+          "is_moving": true,
           "classification": "stationary",
           "facing": "UP",
           "max_tiles": 2,
@@ -76,6 +82,8 @@
         {
           "x": 19.0,
           "y": 29.0,
+          "direction": "LEFT",
+          "is_moving": true,
           "facing": "LEFT",
           "max_tiles": 2,
           "n_keyframes": 4,
@@ -96,7 +104,7 @@
               "sprite_path": "ingame_ui/ball.png",
               "name": "Pokeball",
               "price": 50,
-              "count": 9
+              "count": 8
             }
           ]
         }
@@ -169,8 +177,10 @@
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 22.142702309954437,
-    "y": 28.587991631835774
+    "x": 22.818690475583168,
+    "y": 30.967916738879307,
+    "direction": "UP",
+    "is_moving": false
   },
   "bag": {
     "monsters": [
@@ -197,27 +207,27 @@
       },
       {
         "name": "Coins",
-        "count": 8,
+        "count": 18,
         "sprite_path": "ingame_ui/coin.png"
       },
       {
         "name": "Pokeball",
-        "count": 11,
+        "count": 12,
         "sprite_path": "ingame_ui/ball.png"
       },
       {
         "name": "Heal Potion",
-        "count": 5,
+        "count": 3,
         "sprite_path": "ingame_ui/baricon2.png"
       },
       {
         "name": "Attack Potion",
-        "count": 5,
+        "count": 0,
         "sprite_path": "ingame_ui/options1.png"
       },
       {
         "name": "Defense Potion",
-        "count": 5,
+        "count": 4,
         "sprite_path": "ingame_ui/options2.png"
       }
     ]
@@ -237,6 +247,6 @@
         "sprite_path": "ingame_ui/ball.png"
       }
     ],
-    "time_until_refresh": 74714
+    "time_until_refresh": 17171
   }
 }

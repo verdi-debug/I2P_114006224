@@ -23,10 +23,14 @@ class Entity:
         self.direction = Direction.DOWN
         self.animation.update_pos(self.position)
         self.game_manager = game_manager
+        self.is_moving = False
 
     def update(self, dt: float) -> None:
         self.animation.update_pos(self.position)
-        self.animation.update(dt)
+        if self.is_moving:
+            self.animation.update(dt)
+        else:
+            self.animation.accumulator = 0
 
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
         self.animation.draw(screen, camera)

@@ -194,6 +194,14 @@ class BattleScene(Scene):
             "sprite": pg.image.load(sprite_path).convert_alpha()
         }
 
+        self.turn_state = "player_turn"
+        self.timer = 0
+        self.strength_buff = 0
+        self.defense_buff = 0
+
+        self.attack_button.enabled = True
+        self.run_button.enabled = True
+
     @override
     def update(self, dt: float) -> None:
         self.attack_button.update(dt)

@@ -70,9 +70,21 @@ class EnemyTrainer(Entity):
         )
 
         self.detected = False
+        self.is_moving = False
+        self._last_pos = Position(self.position.x, self.position.y)
 
     @override
     def update(self, dt: float) -> None:
+        self.is_moving = (
+            self.position.x != self._last_pos.x or
+            self.position.y != self._last_pos.y)
+
+        if self.is_moving:
+            self.animation.update(dt)
+
+        self._last_pos.x = self.position.x
+        self._last_pos.y = self.position.y
+
         self._movement.update(self, dt)
         self._has_los_to_player()
 
